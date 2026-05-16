@@ -67,16 +67,28 @@ const DriverDashboard = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [activeRide, setActiveRide] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [coords, setCoords] = useState({ lat: null, lng: null });
   const driverId = localStorage.getItem('userId');
 
   const fetchRequests = async () => {
     try {
-      const { data } = await axios.get('/api/booking/available');
+      const url = coords.lat ? `/api/booking/available?lat=${coords.lat}&lng=${coords.lng}` : '/api/booking/available';
+      const { data } = await axios.get(url);
       setRequests(data);
     } catch (err) {
       console.error('Error fetching rides:', err);
     }
   };
+
+  useEffect(() => {
+    if (isOnline) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.error('Location denied'),
+        { enableHighAccuracy: true }
+      );
+    }
+  }, [isOnline]);
 
   const fetchActiveRide = async () => {
     try {
@@ -95,7 +107,7 @@ const DriverDashboard = () => {
       const interval = setInterval(fetchRequests, 5000);
       return () => clearInterval(interval);
     }
-  }, [isOnline, driverId]);
+  }, [isOnline, driverId, coords]);
 
   const handleAccept = async (ride) => {
     try {

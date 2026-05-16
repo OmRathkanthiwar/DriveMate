@@ -4,6 +4,7 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const Driver = require('../models/Driver');
 const { calculateFare } = require('../utils/fareCalculator');
+const { getCoords } = require('../utils/geocoder');
 
 // Create a booking request (calculate fare)
 router.post('/calculate', async (req, res) => {
@@ -19,7 +20,13 @@ router.post('/calculate', async (req, res) => {
 // Create booking
 router.post('/', async (req, res) => {
   try {
-    const booking = new Booking(req.body);
+    const { startLocation } = req.body;
+    const location = await getCoords(startLocation);
+    
+    const booking = new Booking({
+      ...req.body,
+      location
+    });
     await booking.save();
     res.status(201).json(booking);
   } catch (err) {
@@ -27,10 +34,23 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get available (pending) bookings for drivers
+// Get available (pending) bookings for drivers within radius
 router.get('/available', async (req, res) => {
   try {
-    const bookings = await Booking.find({ status: 'pending' }).populate('customerId', 'name');
+    const { lat, lng } = req.query;
+    let query = { status: 'pending' };
+
+    // If driver location is provided, filter by 15km radius
+    if (lat && lng) {
+      query.location = {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+          $maxDistance: 15000 // 15km in meters
+        }
+      };
+    }
+
+    const bookings = await Booking.find(query).populate('customerId', 'name');
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: err.message });

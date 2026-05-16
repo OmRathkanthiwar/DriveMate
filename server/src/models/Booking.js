@@ -8,8 +8,12 @@ const BookingSchema = new mongoose.Schema({
   endDate: { type: String, required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },
-  startLocation: { type: String, required: true }, // Simplified to String
-  endLocation: { type: String, required: true },   // Simplified to String
+  startLocation: { type: String, required: true },
+  endLocation: { type: String, required: true },
+  location: {
+    type: { type: String, default: 'Point' },
+    coordinates: { type: [Number], index: '2dsphere' } // [longitude, latitude]
+  },
   vehicleType: { type: String, required: true },
   transmissionType: { type: String, required: true },
   fuelType: { type: String, required: true },
