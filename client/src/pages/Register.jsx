@@ -45,7 +45,8 @@ const Register = () => {
   
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', phone: '',
-    address: '', aadhaar: '', license: '', pan: ''
+    address: '', aadhaar: '', license: '', pan: '',
+    city: '', state: '', country: 'India'
   });
 
   const handleUpload = (id, file) => {
@@ -53,7 +54,7 @@ const Register = () => {
   };
 
   const isFormValid = () => {
-    const basicInfo = formData.name && formData.email && formData.password && formData.phone;
+    const basicInfo = formData.name && formData.email && formData.password && formData.phone && formData.city && formData.state && formData.country;
     if (role === 'customer') return basicInfo;
     return (
       basicInfo && formData.address && formData.aadhaar && formData.license && formData.pan &&
@@ -126,6 +127,18 @@ const Register = () => {
                 <div className="space-y-2">
                   <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Phone Number</label>
                   <input name="phone" required onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="9876543210" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">City</label>
+                  <input name="city" required onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="e.g. Pune" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">State</label>
+                  <input name="state" required onChange={(e) => setFormData({...formData, state: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="e.g. Maharashtra" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Country</label>
+                  <input name="country" required defaultValue="India" onChange={(e) => setFormData({...formData, country: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" />
                 </div>
               </div>
 
