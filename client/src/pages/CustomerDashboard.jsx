@@ -44,6 +44,9 @@ const CustomerDashboard = () => {
     }
   ]);
 
+  let userName = localStorage.getItem('userName');
+  if (!userName || userName === 'undefined') userName = 'User';
+
   return (
     <div className="min-h-screen bg-slate-950">
       <Navbar />
@@ -53,7 +56,7 @@ const CustomerDashboard = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Welcome back, <span className="text-gradient">Om</span></h1>
+              <h1 className="text-4xl font-bold text-white mb-2">Welcome back, <span className="text-gradient">{userName}</span></h1>
               <p className="text-slate-400">Manage your bookings and travel in comfort.</p>
             </div>
             <div className="flex gap-4">
