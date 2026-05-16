@@ -37,6 +37,16 @@ router.get('/available', async (req, res) => {
   }
 });
 
+// Get bookings for a specific user
+router.get('/user/:id', async (req, res) => {
+  try {
+    const bookings = await Booking.find({ customerId: req.params.id }).sort({ createdAt: -1 });
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Find available drivers for a booking
 router.get('/:id/available-drivers', async (req, res) => {
   try {
