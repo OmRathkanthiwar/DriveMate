@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, MapPin, Camera, CheckCircle2, FileText, CreditCard, ShieldCheck, UserCircle } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Camera, CheckCircle2, FileText, CreditCard, ShieldCheck, UserCircle, Hash } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
 
@@ -44,7 +44,8 @@ const Register = () => {
   });
   
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: ''
+    name: '', email: '', password: '', phone: '',
+    address: '', aadhaar: '', license: '', pan: ''
   });
 
   const handleUpload = (id, file) => {
@@ -55,7 +56,7 @@ const Register = () => {
     const basicInfo = formData.name && formData.email && formData.password && formData.phone;
     if (role === 'customer') return basicInfo;
     return (
-      basicInfo && 
+      basicInfo && formData.address && formData.aadhaar && formData.license && formData.pan &&
       files.profilePhoto && files.addressProof && files.aadhaarCard && 
       files.license && files.panCard
     );
@@ -109,7 +110,6 @@ const Register = () => {
 
           <div className="md:w-3/4 p-8 md:p-14 text-left">
             <form onSubmit={handleSubmit} className="space-y-10">
-              {/* LARGE INPUT BOXES */}
               <div className="grid md:grid-cols-2 gap-x-10 gap-y-8">
                 <div className="space-y-2">
                   <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Full Name</label>
@@ -133,11 +133,29 @@ const Register = () => {
                 <div className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
                   <div className="flex items-center gap-4">
                      <div className="h-px bg-slate-800 flex-1" />
-                     <span className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Verification Documents</span>
+                     <span className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Driver Details & Documents</span>
                      <div className="h-px bg-slate-800 flex-1" />
                   </div>
+
+                  <div className="grid md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div className="space-y-2 col-span-2">
+                      <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Full Residential Address</label>
+                      <input name="address" required onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none text-lg" placeholder="123, Street Name, City, State" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Aadhaar Number</label>
+                      <input name="aadhaar" required onChange={(e) => setFormData({...formData, aadhaar: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none text-lg" placeholder="12-digit number" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">License Number</label>
+                      <input name="license" required onChange={(e) => setFormData({...formData, license: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none text-lg" placeholder="DL-1234567890" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">PAN Card Number</label>
+                      <input name="pan" required onChange={(e) => setFormData({...formData, pan: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none text-lg" placeholder="ABCDE1234F" />
+                    </div>
+                  </div>
                   
-                  {/* 5 UPLOAD BOXES */}
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <UploadBox id="profilePhoto" label="Profile Photo" icon={UserCircle} file={files.profilePhoto} onUpload={handleUpload} />
                     <UploadBox id="addressProof" label="Address Proof" icon={MapPin} file={files.addressProof} onUpload={handleUpload} />
@@ -154,7 +172,7 @@ const Register = () => {
                   disabled={loading || !isFormValid()} 
                   className="w-full py-5 rounded-2xl premium-gradient text-white font-bold text-xl hover:shadow-2xl transition-all disabled:opacity-20 disabled:grayscale cursor-pointer active:scale-95"
                 >
-                  {loading ? 'Processing Documents...' : 'Register as Verified Driver'}
+                  {loading ? 'Registering Driver...' : 'Complete Driver Registration'}
                 </button>
               </div>
             </form>
