@@ -1,24 +1,38 @@
 // src/utils/fareCalculator.js
 
 const calculateFare = (details) => {
-  const { dayHours, nightHours, isNightDrive } = details;
+  const { startDate, endDate, isNightDrive } = details;
   
+  if (!startDate || !endDate) return 500;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Calculate total days (minimum 1 day)
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
   const DAY_RATE = 100; // per hour
-  const NIGHT_RATE = 150; // per hour (Active driving)
-  const NIGHT_ALLOWANCE = 200; // Flat fee for driver's stay
+  const NIGHT_RATE = 150; // per hour
+  const NIGHT_ALLOWANCE = 200;
   const MIN_FARE = 500;
 
-  let fare = (dayHours * DAY_RATE);
+  // Each day consists of:
+  // 16 Day Hours (Fixed)
+  // 8 Night Hours (Optional)
+  
+  const dayFarePerDay = 16 * DAY_RATE; // 1600
+  let nightFarePerDay = 0;
 
   if (isNightDrive) {
-    // Active night driving: Apply night rate + allowance
-    fare += (nightHours * NIGHT_RATE) + NIGHT_ALLOWANCE;
-  } else if (nightHours > 0) {
-    // Driver is just staying overnight: Only flat allowance applies
-    fare += NIGHT_ALLOWANCE;
+    nightFarePerDay = (8 * NIGHT_RATE); // 1200 (No extra allowance when active)
+  } else {
+    nightFarePerDay = NIGHT_ALLOWANCE; // Just ₹200 for the driver's stay
   }
 
-  return Math.max(fare, MIN_FARE);
+  let totalFare = (dayFarePerDay + nightFarePerDay) * diffDays;
+
+  return Math.max(totalFare, MIN_FARE);
 };
 
 module.exports = { calculateFare };
