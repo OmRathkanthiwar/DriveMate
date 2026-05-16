@@ -176,7 +176,7 @@ const DriverDashboard = () => {
                   <div className="space-y-4">
                      <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-900/50">
                         <div className="flex items-center gap-3">
-                           < इंडियनRupee className="text-green-500 w-5 h-5" />
+                           <IndianRupee className="text-green-500 w-5 h-5" />
                            <span className="text-slate-400">Earnings</span>
                         </div>
                         <span className="text-white font-bold">₹0.00</span>
