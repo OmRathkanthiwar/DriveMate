@@ -15,7 +15,8 @@ const Login = () => {
       const { data } = await axios.post('/api/auth/login', formData);
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
-      localStorage.setItem('userName', data.name); // Save real name
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('userId', data.id); // Save unique ID
       
       if (data.role === 'admin') navigate('/admin');
       else if (data.role === 'driver') navigate('/driver/dashboard');

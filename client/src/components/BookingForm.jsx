@@ -51,6 +51,7 @@ const BookingForm = () => {
       await axios.post('http://localhost:5000/api/booking', {
         ...formData,
         fare,
+        customerId: localStorage.getItem('userId'),
         status: 'pending'
       });
       setStep(3);
