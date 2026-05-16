@@ -67,27 +67,38 @@ const DriverDashboard = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [activeRide, setActiveRide] = useState(null);
   const [requests, setRequests] = useState([]);
+  const driverId = localStorage.getItem('userId');
+
+  const fetchRequests = async () => {
+    try {
+      const { data } = await axios.get('/api/booking/available');
+      setRequests(data);
+    } catch (err) {
+      console.error('Error fetching rides:', err);
+    }
+  };
+
+  const fetchActiveRide = async () => {
+    try {
+      const { data } = await axios.get(`/api/booking/driver/${driverId}/active`);
+      if (data) setActiveRide(data);
+    } catch (err) {
+      console.error('Error fetching active ride:', err);
+    }
+  };
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const { data } = await axios.get('/api/booking/available');
-        setRequests(data);
-      } catch (err) {
-        console.error('Error fetching rides:', err);
-      }
-    };
-
+    if (driverId) fetchActiveRide();
+    
     if (isOnline) {
       fetchRequests();
-      const interval = setInterval(fetchRequests, 5000); // Poll every 5 seconds
+      const interval = setInterval(fetchRequests, 5000);
       return () => clearInterval(interval);
     }
-  }, [isOnline]);
+  }, [isOnline, driverId]);
 
   const handleAccept = async (ride) => {
     try {
-      const driverId = localStorage.getItem('userId');
       const { data } = await axios.patch(`/api/booking/${ride._id}/accept`, { driverId });
       setActiveRide(data);
       setRequests(requests.filter(r => r._id !== ride._id));
@@ -120,11 +131,11 @@ const DriverDashboard = () => {
             </button>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-12">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-12 text-left">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6 md:space-y-8">
                {activeRide ? (
-                 <div className="space-y-6">
+                 <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
                        <Navigation className="text-blue-400" /> Current Mission
                     </h2>
@@ -152,8 +163,12 @@ const DriverDashboard = () => {
                                 </div>
                              </div>
                              <div className="space-y-4">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">OTP Verification</p>
-                                <input maxLength={6} placeholder="Start OTP" className="w-full bg-slate-900 border border-slate-800 rounded-xl md:rounded-2xl p-4 text-center text-xl md:text-2xl font-mono text-blue-400 tracking-[0.2em] md:tracking-[0.5em] focus:border-blue-500 outline-none" />
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Customer Start OTP</p>
+                                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 text-center">
+                                   <span className="text-4xl font-black text-blue-400 tracking-[0.5em]">
+                                      {activeRide.otp?.start || '----'}
+                                   </span>
+                                </div>
                              </div>
                           </div>
 

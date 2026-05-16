@@ -47,6 +47,19 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
+// Get current active ride for a driver
+router.get('/driver/:id/active', async (req, res) => {
+  try {
+    const ride = await Booking.findOne({ 
+      driverId: req.params.id, 
+      status: { $in: ['accepted', 'started'] } 
+    }).populate('customerId');
+    res.json(ride);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Accept a booking
 router.patch('/:id/accept', async (req, res) => {
   try {

@@ -45,13 +45,19 @@ const BookingForm = () => {
   };
 
   const handleConfirm = async () => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('Please login to complete your booking!');
+      window.location.href = '/login';
+      return;
+    }
     setLoading(true);
     try {
       // Save booking to REAL Database
       await axios.post('http://localhost:5000/api/booking', {
         ...formData,
         fare,
-        customerId: localStorage.getItem('userId'),
+        customerId: userId,
         status: 'pending'
       });
       setStep(3);
