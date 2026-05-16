@@ -26,8 +26,9 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-// Register (with 4-Field Cloudinary Upload)
+// Register (with 5-Field Cloudinary Upload)
 router.post('/register', upload.fields([
+  { name: 'profilePhoto', maxCount: 1 },
   { name: 'addressProof', maxCount: 1 },
   { name: 'aadhaarCard', maxCount: 1 },
   { name: 'licenseFile', maxCount: 1 },
@@ -41,6 +42,7 @@ router.post('/register', upload.fields([
 
     let newUser;
     const photoUrls = {
+      profile: req.files['profilePhoto']?.[0]?.path,
       addressProof: req.files['addressProof']?.[0]?.path,
       aadhaarCard: req.files['aadhaarCard']?.[0]?.path,
       license: req.files['licenseFile']?.[0]?.path,

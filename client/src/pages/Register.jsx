@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, MapPin, Camera, CheckCircle2, FileText, CreditCard, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Camera, CheckCircle2, FileText, CreditCard, ShieldCheck, UserCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
 
@@ -16,9 +16,9 @@ const UploadBox = ({ label, icon: Icon, file, onUpload, id }) => {
         className={`p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${file ? 'border-green-500/50 bg-green-500/5 text-green-400' : 'border-slate-800 text-slate-500 hover:border-blue-500/50 hover:bg-blue-500/5'}`}
       >
         {file ? (
-          <div className="flex flex-col items-center gap-1">
-            <CheckCircle2 className="w-6 h-6" />
-            <span className="text-[10px] font-bold truncate max-w-[100px]">{file.name}</span>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <CheckCircle2 className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-bold line-clamp-1 px-2">{file.name}</span>
           </div>
         ) : (
           <>
@@ -36,6 +36,7 @@ const Register = () => {
   const [role, setRole] = useState('customer');
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState({
+    profilePhoto: null,
     addressProof: null,
     aadhaarCard: null,
     license: null,
@@ -43,8 +44,7 @@ const Register = () => {
   });
   
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', address: '',
-    aadhaarNo: '', licenseNo: '', panNo: '', city: '', state: '', country: 'India'
+    name: '', email: '', password: '', phone: ''
   });
 
   const handleUpload = (id, file) => {
@@ -52,10 +52,12 @@ const Register = () => {
   };
 
   const isFormValid = () => {
-    if (role === 'customer') return formData.name && formData.email && formData.password && formData.phone;
+    const basicInfo = formData.name && formData.email && formData.password && formData.phone;
+    if (role === 'customer') return basicInfo;
     return (
-      formData.name && formData.email && formData.password && formData.phone &&
-      files.addressProof && files.aadhaarCard && files.license && files.panCard
+      basicInfo && 
+      files.profilePhoto && files.addressProof && files.aadhaarCard && 
+      files.license && files.panCard
     );
   };
 
@@ -68,6 +70,7 @@ const Register = () => {
       data.append('role', role);
       
       if (role === 'driver') {
+        data.append('profilePhoto', files.profilePhoto);
         data.append('addressProof', files.addressProof);
         data.append('aadhaarCard', files.aadhaarCard);
         data.append('licenseFile', files.license);
@@ -94,59 +97,66 @@ const Register = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-5xl mx-auto glass rounded-3xl overflow-hidden flex flex-col md:flex-row"
+          className="max-w-6xl mx-auto glass rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row"
         >
           <div className="md:w-1/4 premium-gradient p-10 text-white flex flex-col justify-center">
-            <h2 className="text-2xl font-bold mb-6">DriveMate</h2>
+            <h2 className="text-3xl font-bold mb-8">DriveMate</h2>
             <div className="space-y-4">
-              <button onClick={() => setRole('customer')} className={`w-full py-4 rounded-xl border-2 transition-all font-bold text-sm ${role === 'customer' ? 'bg-white text-blue-600 border-white' : 'border-white/30 text-white'}`}>Customer</button>
-              <button onClick={() => setRole('driver')} className={`w-full py-4 rounded-xl border-2 transition-all font-bold text-sm ${role === 'driver' ? 'bg-white text-blue-600 border-white' : 'border-white/30 text-white'}`}>Driver</button>
+              <button onClick={() => setRole('customer')} className={`w-full py-4 rounded-2xl border-2 transition-all font-bold text-sm ${role === 'customer' ? 'bg-white text-blue-600 border-white shadow-xl' : 'border-white/30 text-white hover:bg-white/10'}`}>Customer</button>
+              <button onClick={() => setRole('driver')} className={`w-full py-4 rounded-2xl border-2 transition-all font-bold text-sm ${role === 'driver' ? 'bg-white text-blue-600 border-white shadow-xl' : 'border-white/30 text-white hover:bg-white/10'}`}>Driver</button>
             </div>
           </div>
 
-          <div className="md:w-3/4 p-8 md:p-12 text-left">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-500 font-bold uppercase">Name</label>
-                  <input name="name" required onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white focus:border-blue-500 outline-none" />
+          <div className="md:w-3/4 p-8 md:p-14 text-left">
+            <form onSubmit={handleSubmit} className="space-y-10">
+              {/* LARGE INPUT BOXES */}
+              <div className="grid md:grid-cols-2 gap-x-10 gap-y-8">
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Full Name</label>
+                  <input name="name" required onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="e.g. Sanket Magar" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-500 font-bold uppercase">Email</label>
-                  <input name="email" required type="email" onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white focus:border-blue-500 outline-none" />
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Email Address</label>
+                  <input name="email" required type="email" onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="sanket@example.com" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-500 font-bold uppercase">Password</label>
-                  <input name="password" required type="password" onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white focus:border-blue-500 outline-none" />
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Secure Password</label>
+                  <input name="password" required type="password" onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="••••••••" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-500 font-bold uppercase">Phone</label>
-                  <input name="phone" required onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white focus:border-blue-500 outline-none" />
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-500 font-bold uppercase tracking-widest">Phone Number</label>
+                  <input name="phone" required onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all text-lg" placeholder="9876543210" />
                 </div>
               </div>
 
               {role === 'driver' && (
-                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="h-px bg-slate-800 w-full" />
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-10 animate-in slide-in-from-bottom-8 duration-700">
+                  <div className="flex items-center gap-4">
+                     <div className="h-px bg-slate-800 flex-1" />
+                     <span className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Verification Documents</span>
+                     <div className="h-px bg-slate-800 flex-1" />
+                  </div>
+                  
+                  {/* 5 UPLOAD BOXES */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <UploadBox id="profilePhoto" label="Profile Photo" icon={UserCircle} file={files.profilePhoto} onUpload={handleUpload} />
                     <UploadBox id="addressProof" label="Address Proof" icon={MapPin} file={files.addressProof} onUpload={handleUpload} />
                     <UploadBox id="aadhaarCard" label="Aadhaar Card" icon={ShieldCheck} file={files.aadhaarCard} onUpload={handleUpload} />
                     <UploadBox id="license" label="Driving License" icon={FileText} file={files.license} onUpload={handleUpload} />
                     <UploadBox id="panCard" label="PAN Card" icon={CreditCard} file={files.panCard} onUpload={handleUpload} />
                   </div>
-                  <div className="bg-blue-500/5 p-4 rounded-xl border border-blue-500/10">
-                    <p className="text-xs text-blue-300">All 4 documents are mandatory for driver verification.</p>
-                  </div>
                 </div>
               )}
 
-              <button 
-                type="submit" 
-                disabled={loading || !isFormValid()} 
-                className="w-full py-4 rounded-2xl premium-gradient text-white font-bold text-lg hover:shadow-2xl transition-all disabled:opacity-30 disabled:grayscale cursor-pointer"
-              >
-                {loading ? 'Verifying Documents...' : 'Create Verified Account'}
-              </button>
+              <div className="pt-4">
+                <button 
+                  type="submit" 
+                  disabled={loading || !isFormValid()} 
+                  className="w-full py-5 rounded-2xl premium-gradient text-white font-bold text-xl hover:shadow-2xl transition-all disabled:opacity-20 disabled:grayscale cursor-pointer active:scale-95"
+                >
+                  {loading ? 'Processing Documents...' : 'Register as Verified Driver'}
+                </button>
+              </div>
             </form>
           </div>
         </motion.div>
