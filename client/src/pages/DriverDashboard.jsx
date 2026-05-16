@@ -85,9 +85,15 @@ const DriverDashboard = () => {
     }
   }, [isOnline]);
 
-  const handleAccept = (ride) => {
-    setActiveRide(ride);
-    setRequests(requests.filter(r => r._id !== ride._id));
+  const handleAccept = async (ride) => {
+    try {
+      const driverId = localStorage.getItem('userId');
+      const { data } = await axios.patch(`/api/booking/${ride._id}/accept`, { driverId });
+      setActiveRide(data);
+      setRequests(requests.filter(r => r._id !== ride._id));
+    } catch (err) {
+      alert('Failed to accept ride. Please try again.');
+    }
   };
 
   return (

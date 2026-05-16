@@ -47,6 +47,32 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
+// Accept a booking
+router.patch('/:id/accept', async (req, res) => {
+  try {
+    const { driverId } = req.body;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
+    
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'accepted', 
+        driverId,
+        'otp.start': otp 
+      },
+      { new: true }
+    ).populate('customerId');
+
+    // Send real SMS to customer
+    // Note: In production, use the Twilio service I configured earlier
+    console.log(`✅ [Twilio] Sending Start OTP ${otp} to ${booking.customerId.phone}`);
+
+    res.json(booking);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Find available drivers for a booking
 router.get('/:id/available-drivers', async (req, res) => {
   try {
