@@ -33,6 +33,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-4">
           {token ? (
             <div className="flex items-center gap-6">
+              <Link to={localStorage.getItem('role') === 'driver' ? '/driver/dashboard' : '/customer/dashboard'} className="text-blue-400 font-bold hover:text-blue-300 transition-colors text-sm">My Dashboard</Link>
               <div className="flex items-center gap-2 text-slate-300">
                  <UserIcon className="w-4 h-4 text-blue-400" />
                  <span className="text-sm font-bold truncate max-w-[100px]">{userName || 'User'}</span>
@@ -78,6 +79,10 @@ const Navbar = () => {
             
             <Link to="/" onClick={() => setIsOpen(false)} className="text-4xl font-bold text-white">Home</Link>
             <Link to="/book" onClick={() => setIsOpen(false)} className="text-4xl font-bold text-white">Book a Ride</Link>
+            
+            {token && (
+               <Link to={localStorage.getItem('role') === 'driver' ? '/driver/dashboard' : '/customer/dashboard'} onClick={() => setIsOpen(false)} className="text-4xl font-bold text-blue-400">My Dashboard</Link>
+            )}
             
             <div className="h-px bg-slate-900 w-full" />
             
