@@ -172,7 +172,10 @@ const Register = () => {
                   disabled={loading || !isFormValid()} 
                   className="w-full py-5 rounded-2xl premium-gradient text-white font-bold text-xl hover:shadow-2xl transition-all disabled:opacity-20 disabled:grayscale cursor-pointer active:scale-95"
                 >
-                  {loading ? 'Registering Driver...' : 'Complete Driver Registration'}
+                  {loading 
+                    ? (role === 'driver' ? 'Registering Driver...' : 'Creating Account...') 
+                    : (role === 'driver' ? 'Complete Driver Registration' : 'Create Customer Account')
+                  }
                 </button>
               </div>
             </form>
