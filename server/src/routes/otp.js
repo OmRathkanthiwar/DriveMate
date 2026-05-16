@@ -7,8 +7,16 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // REAL OTP sending via Twilio
 router.post('/send', async (req, res) => {
-  const { phone, type } = req.body;
+  let { phone, type } = req.body;
   
+  // Auto-fix: Add +91 if user only entered 10 digits
+  if (phone.length === 10 && !phone.startsWith('+')) {
+    phone = `+91${phone}`;
+  } else if (!phone.startsWith('+')) {
+    // If it's something like '919876...', just add the +
+    phone = `+${phone}`;
+  }
+
   // Generate a 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   
