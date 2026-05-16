@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const BookingSchema = new mongoose.Schema({
-  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Made optional for easier testing
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   startDate: { type: String, required: true },
   endDate: { type: String, required: true },
@@ -12,11 +12,12 @@ const BookingSchema = new mongoose.Schema({
   endLocation: { type: String, required: true },
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: { type: [Number], index: '2dsphere' } // [longitude, latitude]
+    coordinates: { type: [Number], index: '2dsphere' }
   },
   vehicleType: { type: String, required: true },
   transmissionType: { type: String, required: true },
   fuelType: { type: String, required: true },
+  tripType: { type: String, enum: ['one-way', 'round-trip'], default: 'round-trip' },
   fare: { type: Number },
   status: { type: String, enum: ['pending', 'accepted', 'started', 'completed', 'cancelled'], default: 'pending' },
   otp: {
@@ -24,7 +25,9 @@ const BookingSchema = new mongoose.Schema({
     end: String
   },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
-  paymentMethod: { type: String, enum: ['razorpay', 'cash'], default: 'razorpay' }
+  paymentMethod: { type: String, enum: ['razorpay', 'cash'], default: 'razorpay' },
+  codSettled: { type: Boolean, default: false },
+  codDeadline: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', BookingSchema);

@@ -1,260 +1,151 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Power, MapPin, Navigation, IndianRupee, Clock, CheckCircle, XCircle, User } from 'lucide-react';
+import { Power, MapPin, Navigation, IndianRupee, Clock, CheckCircle, XCircle, User, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
-
-const RideRequestCard = ({ ride, onAccept }) => (
-  <motion.div 
-    layout
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="glass p-6 rounded-3xl border border-white/5 hover:border-blue-500/20 transition-all"
-  >
-    <div className="flex flex-col md:flex-row justify-between gap-6">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider">New Request</span>
-          <span className="text-slate-500 text-sm flex items-center gap-1">
-             <Clock className="w-3 h-3" /> {new Date(ride.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        </div>
-        
-        <div className="space-y-2">
-           <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-bold tracking-tighter">Pickup</p>
-                <p className="text-white font-medium">{ride.startLocation}</p>
-              </div>
-           </div>
-           <div className="flex items-start gap-3">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2" />
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-bold tracking-tighter">Destination</p>
-                <p className="text-white font-medium">{ride.endLocation}</p>
-              </div>
-           </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col justify-between md:items-end gap-6">
-         <div className="text-right">
-            <p className="text-sm text-slate-400 mb-1">Estimated Earnings</p>
-            <p className="text-3xl font-bold text-white flex items-center justify-end gap-1">
-               <IndianRupee className="w-5 h-5 text-green-400" /> {Math.floor(ride.fare * 0.8)}
-            </p>
-            <p className="text-[10px] text-slate-500 uppercase">After 20% platform fee</p>
-         </div>
-         
-         <div className="flex gap-3">
-            <button className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all">
-               <XCircle className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => onAccept(ride)}
-              className="px-8 py-3 rounded-2xl premium-gradient text-white font-bold flex items-center gap-2 hover:shadow-lg transition-all"
-            >
-               Accept Ride <Navigation className="w-4 h-4" />
-            </button>
-         </div>
-      </div>
-    </div>
-  </motion.div>
-);
 
 const DriverDashboard = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [activeRide, setActiveRide] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [coords, setCoords] = useState({ lat: null, lng: null });
+  const [otpInput, setOtpInput] = useState('');
   const driverId = localStorage.getItem('userId');
 
   const fetchRequests = async () => {
     try {
-      const url = coords.lat ? `/api/booking/available?lat=${coords.lat}&lng=${coords.lng}` : '/api/booking/available';
-      const { data } = await axios.get(url);
+      const { data } = await axios.get('/api/booking/available');
       setRequests(data);
-    } catch (err) {
-      console.error('Error fetching rides:', err);
-    }
+    } catch (err) { console.error(err); }
   };
-
-  useEffect(() => {
-    if (isOnline) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => console.error('Location denied'),
-        { enableHighAccuracy: true }
-      );
-    }
-  }, [isOnline]);
 
   const fetchActiveRide = async () => {
     try {
-      const { data } = await axios.get(`/api/booking/driver/${driverId}/active`);
+      const { data } = await axios.get(`/api/driver/${driverId}/active`);
       if (data) setActiveRide(data);
-    } catch (err) {
-      console.error('Error fetching active ride:', err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   useEffect(() => {
     if (driverId) fetchActiveRide();
-    
     if (isOnline) {
       fetchRequests();
       const interval = setInterval(fetchRequests, 5000);
       return () => clearInterval(interval);
     }
-  }, [isOnline, driverId, coords]);
+  }, [isOnline, driverId]);
 
   const handleAccept = async (ride) => {
     try {
       const { data } = await axios.patch(`/api/booking/${ride._id}/accept`, { driverId });
       setActiveRide(data);
-      setRequests(requests.filter(r => r._id !== ride._id));
-    } catch (err) {
-      alert('Failed to accept ride. Please try again.');
-    }
+    } catch (err) { alert('Accept failed'); }
+  };
+
+  const verifyStart = async () => {
+    try {
+      const { data } = await axios.patch(`/api/booking/${activeRide._id}/start`, { otp: otpInput });
+      setActiveRide(data);
+      setOtpInput('');
+    } catch (err) { alert('Invalid Start OTP'); }
+  };
+
+  const verifyEnd = async () => {
+    try {
+      const { data } = await axios.patch(`/api/booking/${activeRide._id}/complete`, { otp: otpInput });
+      setActiveRide(null);
+      setOtpInput('');
+      alert('Trip Completed Successfully!');
+    } catch (err) { alert('Invalid End OTP'); }
   };
 
   return (
     <div className="min-h-screen bg-slate-950">
       <Navbar />
-      
-      <div className="pt-32 pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Top Bar */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Driver <span className="text-gradient">Portal</span></h1>
-              <div className="flex items-center gap-3">
-                 <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                 <p className="text-slate-400 font-medium">{isOnline ? 'Online & Accepting Rides' : 'Offline'}</p>
-              </div>
-            </div>
+      <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-12">
+           <h1 className="text-4xl font-bold text-white">Driver <span className="text-gradient">Console</span></h1>
+           <button onClick={() => setIsOnline(!isOnline)} className={`px-8 py-3 rounded-2xl font-bold ${isOnline ? 'bg-red-500/10 text-red-500' : 'bg-blue-600 text-white'}`}>
+             {isOnline ? 'Go Offline' : 'Go Online'}
+           </button>
+        </div>
 
-            <button 
-              onClick={() => setIsOnline(!isOnline)}
-              className={`flex items-center gap-3 px-8 py-4 rounded-3xl font-bold transition-all ${isOnline ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20' : 'premium-gradient text-white shadow-lg'}`}
-            >
-              <Power className="w-5 h-5" /> {isOnline ? 'Go Offline' : 'Go Online'}
-            </button>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-12 text-left">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6 md:space-y-8">
-               {activeRide ? (
-                 <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
-                       <Navigation className="text-blue-400" /> Current Mission
-                    </h2>
-                    <div className="glass p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-2 border-blue-500/30 relative overflow-hidden">
-                       <div className="relative z-10">
-                          <div className="flex items-center gap-4 mb-6 md:mb-8">
-                             <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
-                                <User className="text-blue-400" />
-                             </div>
-                             <div>
-                                <p className="text-[10px] md:text-sm text-slate-500 uppercase font-bold tracking-widest">Customer</p>
-                                <h3 className="text-xl md:text-2xl font-bold text-white">
-                                   {activeRide.customerId?.name || 'Customer'}
-                                </h3>
-                             </div>
-                          </div>
-
-                          <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-8 md:mb-10">
-                             <div className="space-y-4">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Journey</p>
-                                <div className="space-y-2">
-                                   <p className="text-white text-base md:text-lg font-medium">{activeRide.startLocation}</p>
-                                   <div className="h-4 md:h-8 w-px bg-slate-800 ml-2" />
-                                   <p className="text-white text-base md:text-lg font-medium">{activeRide.endLocation}</p>
-                                </div>
-                             </div>
-                             <div className="space-y-4">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Customer Start OTP</p>
-                                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 text-center">
-                                   <span className="text-4xl font-black text-blue-400 tracking-[0.5em]">
-                                      {activeRide.otp?.start || '----'}
-                                   </span>
-                                </div>
-                             </div>
-                          </div>
-
-                          <div className="flex flex-col sm:flex-row gap-4">
-                             <button className="flex-1 py-4 rounded-xl md:rounded-2xl bg-green-500 text-white font-bold text-lg hover:shadow-lg active:scale-95 transition-all">Start Journey</button>
-                             <button onClick={() => setActiveRide(null)} className="flex-1 py-4 rounded-xl md:rounded-2xl border border-slate-800 text-slate-400 hover:bg-slate-800 font-bold transition-all">Cancel</button>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-               ) : (
-                 <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                       <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                          <MapPin className="text-blue-400" /> Nearby Opportunities
-                       </h2>
-                       <span className="text-sm text-slate-500">{requests.length} rides available</span>
-                    </div>
-
-                    <div className="space-y-6">
-                       {isOnline ? (
-                         <AnimatePresence>
-                           {requests.length > 0 ? (
-                             requests.map(ride => (
-                               <RideRequestCard key={ride._id} ride={ride} onAccept={handleAccept} />
-                             ))
-                           ) : (
-                             <div className="p-20 text-center border-2 border-dashed border-slate-900 rounded-[3rem]">
-                                <p className="text-slate-600 font-bold">Waiting for new requests...</p>
-                             </div>
-                           )}
-                         </AnimatePresence>
-                       ) : (
-                         <div className="glass p-20 rounded-[3rem] text-center">
-                            <XCircle className="w-16 h-16 text-slate-800 mx-auto mb-6" />
-                            <h3 className="text-2xl font-bold text-slate-500">You are Offline</h3>
-                            <p className="text-slate-600">Go online to start seeing ride requests near you.</p>
-                         </div>
-                       )}
-                    </div>
-                 </div>
-               )}
-            </div>
-
-            {/* Stats Sidebar */}
-            <div className="space-y-8">
-               <div className="glass p-8 rounded-[2.5rem] space-y-6">
-                  <h3 className="font-bold text-white text-lg">Today's Performance</h3>
-                  
-                  <div className="space-y-4">
-                     <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-900/50">
-                        <div className="flex items-center gap-3">
-                           <IndianRupee className="text-green-500 w-5 h-5" />
-                           <span className="text-slate-400">Earnings</span>
-                        </div>
-                        <span className="text-white font-bold">₹0.00</span>
-                     </div>
-                     <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-900/50">
-                        <div className="flex items-center gap-3">
-                           <Navigation className="text-blue-500 w-5 h-5" />
-                           <span className="text-slate-400">Trips</span>
-                        </div>
-                        <span className="text-white font-bold">0</span>
-                     </div>
-                     <div className="flex justify-between items-center p-4 rounded-2xl bg-slate-900/50">
-                        <div className="flex items-center gap-3">
-                           <Clock className="text-orange-500 w-5 h-5" />
-                           <span className="text-slate-400">Hours</span>
-                        </div>
-                        <span className="text-white font-bold">0.0</span>
+        <div className="grid lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-6">
+             {activeRide ? (
+               <div className="glass p-10 rounded-[3rem] border-2 border-blue-500/30 text-left">
+                  <div className="flex items-center gap-4 mb-10">
+                     <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-blue-500/20"><User className="text-blue-400" /></div>
+                     <div>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ongoing Trip</p>
+                        <h3 className="text-2xl font-bold text-white">{activeRide.customerId?.name || 'Customer'}</h3>
                      </div>
                   </div>
+
+                  <div className="space-y-8">
+                     <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                           <p className="text-[10px] text-slate-500 font-bold uppercase mb-2">Pickup & Drop</p>
+                           <p className="text-white font-medium">{activeRide.startLocation} → {activeRide.endLocation}</p>
+                        </div>
+                        <div>
+                           <p className="text-[10px] text-slate-500 font-bold uppercase mb-2">Vehicle Specs</p>
+                           <p className="text-white font-medium capitalize">{activeRide.vehicleType} • {activeRide.transmissionType}</p>
+                        </div>
+                     </div>
+
+                     {activeRide.status === 'accepted' && (
+                       <div className="space-y-4 pt-6 border-t border-white/5">
+                          <label className="text-sm font-bold text-slate-400">Enter Start OTP from Customer</label>
+                          <div className="flex gap-4">
+                             <input value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-4 text-white text-2xl tracking-[1em] font-black w-48 outline-none focus:border-blue-500" maxLength="4" />
+                             <button onClick={verifyStart} className="px-8 rounded-xl bg-blue-600 text-white font-bold hover:shadow-lg transition-all">Verify & Start</button>
+                          </div>
+                       </div>
+                     )}
+
+                     {activeRide.status === 'started' && (
+                       <div className="space-y-4 pt-6 border-t border-white/5">
+                          <div className="flex items-center gap-3 text-blue-400 mb-6 font-bold"><Navigation className="animate-bounce" /> Ride is in Progress...</div>
+                          <label className="text-sm font-bold text-slate-400">Enter End OTP from Customer</label>
+                          <div className="flex gap-4">
+                             <input value={otpInput} onChange={(e) => setOtpInput(e.target.value)} className="bg-slate-900 border border-red-500/30 rounded-xl px-6 py-4 text-white text-2xl tracking-[1em] font-black w-48 outline-none focus:border-red-500" maxLength="4" />
+                             <button onClick={verifyEnd} className="px-8 rounded-xl bg-red-600 text-white font-bold hover:shadow-lg transition-all">Verify & Complete</button>
+                          </div>
+                       </div>
+                     )}
+                  </div>
                </div>
-            </div>
+             ) : (
+               <div className="space-y-6">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-3 text-left"><MapPin className="text-blue-400" /> Available Near You</h2>
+                  {requests.map(ride => (
+                    <div key={ride._id} className="glass p-6 rounded-[2rem] border border-white/5 flex justify-between items-center text-left">
+                       <div className="space-y-3">
+                          <span className="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full font-bold uppercase tracking-widest">{ride.tripType}</span>
+                          <h3 className="text-white font-bold">{ride.startLocation.split(',')[0]} → {ride.endLocation.split(',')[0]}</h3>
+                       </div>
+                       <div className="flex items-center gap-8">
+                          <div className="text-right">
+                             <p className="text-2xl font-bold text-white flex items-center gap-1"><IndianRupee className="w-4 h-4" /> {ride.fare}</p>
+                             <p className="text-[10px] text-slate-500 font-bold uppercase">{ride.paymentMethod}</p>
+                          </div>
+                          <button onClick={() => handleAccept(ride)} className="px-8 py-3 rounded-xl premium-gradient text-white font-bold">Accept</button>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+             )}
+          </div>
+
+          <div className="space-y-6">
+             <div className="glass p-8 rounded-[2.5rem] text-left">
+                <h3 className="text-white font-bold mb-6">Settlement Center</h3>
+                <div className="p-4 rounded-xl bg-slate-900 border border-white/5 space-y-2">
+                   <p className="text-[10px] text-slate-500 font-bold uppercase">Pending COD Balance</p>
+                   <p className="text-3xl font-bold text-white">₹0.00</p>
+                </div>
+                <p className="text-[10px] text-slate-600 mt-4 leading-relaxed uppercase font-bold tracking-widest">Note: COD payments must be settled within 48 hours to avoid account block.</p>
+             </div>
           </div>
         </div>
       </div>
