@@ -26,23 +26,32 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-// Register (with REAL Cloudinary Upload)
-router.post('/register', upload.single('photo'), async (req, res) => {
+// Register (with 4-Field Cloudinary Upload)
+router.post('/register', upload.fields([
+  { name: 'addressProof', maxCount: 1 },
+  { name: 'aadhaarCard', maxCount: 1 },
+  { name: 'licenseFile', maxCount: 1 },
+  { name: 'panCard', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { role, name, email, password, ...rest } = req.body;
     
-    // Check if user exists
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ error: 'User already exists' });
 
     let newUser;
-    const photoUrl = req.file ? req.file.path : null;
+    const photoUrls = {
+      addressProof: req.files['addressProof']?.[0]?.path,
+      aadhaarCard: req.files['aadhaarCard']?.[0]?.path,
+      license: req.files['licenseFile']?.[0]?.path,
+      panCard: req.files['panCard']?.[0]?.path,
+    };
 
     if (role === 'driver') {
       newUser = new Driver({ 
         role, name, email, password, 
         contactNo: req.body.phone,
-        photos: photoUrl ? [photoUrl] : [],
+        photos: Object.values(photoUrls).filter(url => !!url), // Save all 4 URLs
         ...rest 
       });
     } else {
