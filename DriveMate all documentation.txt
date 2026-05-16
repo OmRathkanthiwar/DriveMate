@@ -1,0 +1,911 @@
+# Driver Rental Platform - Complete MERN Stack Development Guide
+
+# Project Overview
+
+A MERN stack platform where customers can hire professional drivers to drive their own vehicles.
+
+The system supports:
+
+- Customer ride booking
+- Driver registration and verification
+- Admin management system
+- OTP-based ride start/end
+- Online & cash payments
+- Real-time ride updates
+- Driver matching using location radius
+- Fare calculation using day/night rates
+
+---
+
+# Tech Stack
+
+## Frontend
+- React.js
+- Tailwind CSS
+- Axios
+- React Router DOM
+- Redux Toolkit / Context API
+- Socket.io Client
+
+---
+
+## Backend
+- Node.js
+- Express.js
+- Socket.io
+
+---
+
+## Database
+- MongoDB Atlas
+- Mongoose
+
+---
+
+## Authentication
+- JWT Authentication
+- bcrypt password hashing
+
+---
+
+# Third Party Services
+
+## Cloudinary
+Used for:
+- Driver document uploads
+- Profile photos
+
+---
+
+## Twilio
+Used for:
+- OTP verification
+- Ride start OTP
+- Ride end OTP
+
+---
+
+## Razorpay
+Used for:
+- Online payment gateway
+
+---
+
+## Google Maps API
+Used for:
+- Distance calculation
+- Route calculation
+- Geolocation
+
+---
+
+# User Roles
+
+# 1. Customer
+
+## Features
+- Register/Login
+- Book rides
+- View fare before booking
+- Select ride details
+- Track ride
+- Pay online/cash
+- View driver details
+- Give ride OTP
+- Review and rating
+- Ride history
+
+---
+
+# 2. Driver
+
+## Registration Fields
+- Name
+- Email
+- Phone Number
+- Address
+- Aadhaar Card
+- PAN Card
+- Driving License
+- Address Proof
+- Profile Photo
+
+---
+
+## Driver Features
+- Set availability status
+- Accept/reject rides
+- Set ride radius
+- View earnings
+- Upload documents
+- View ride history
+
+---
+
+## Driver Status Types
+
+```txt
+Available
+Busy
+Offline
+Blocked
+Pending Verification
+```
+
+---
+
+# 3. Admin
+
+## Features
+- Verify driver documents
+- Approve/reject drivers
+- Activate/deactivate drivers
+- Set ride pricing
+- Manage bookings
+- Manage payments
+- Dashboard analytics
+
+---
+
+# Project Flow
+
+# Step 1 - Customer Books Ride
+
+Customer enters:
+
+- Start Date
+- End Date
+- Start Time
+- End Time
+- Start Location
+- End Location
+- Vehicle Type
+- Transmission Type
+- Fuel Type
+
+---
+
+# Vehicle Types
+
+```txt
+Sedan
+Hatchback
+SUV
+Family Car
+Luxury Car
+```
+
+---
+
+# Transmission Types
+
+```txt
+Manual
+Automatic
+```
+
+---
+
+# Fuel Types
+
+```txt
+Petrol
+Diesel
+CNG
+EV
+```
+
+---
+
+# Step 2 - Fare Calculation
+
+Backend calculates:
+
+- Distance
+- Total Hours
+- Day Hours
+- Night Hours
+
+---
+
+# Example Pricing
+
+```txt
+Day Rate = ₹100/hour
+Night Rate = ₹150/hour
+Night Allowance = ₹200
+Minimum Fare = ₹500
+```
+
+---
+
+# Fare Formula
+
+```txt
+Fare =
+(dayHours × dayRate)
++
+(nightHours × nightRate)
++
+nightAllowance
+```
+
+---
+
+# Example Calculation
+
+## Ride Details
+
+```txt
+Total Hours = 8
+Day Hours = 5
+Night Hours = 3
+```
+
+---
+
+## Calculation
+
+```txt
+(5 × 100) + (3 × 150) + 200
+
+= 500 + 450 + 200
+
+= ₹1150
+```
+
+---
+
+# Minimum Fare Logic
+
+```txt
+if (fare < minimumFare)
+    fare = minimumFare
+```
+
+---
+
+# Night Time Logic
+
+```txt
+Night Timing:
+10 PM → 6 AM
+```
+
+Hours inside this range:
+- use night rate
+- apply night allowance
+
+---
+
+# Step 3 - Driver Matching
+
+## Conditions
+
+Driver should be:
+
+- Verified
+- Active
+- Available
+- Inside customer radius
+- Matching vehicle preference
+
+---
+
+# Driver Radius Logic
+
+Driver sets:
+
+```txt
+Maximum Radius = 15 KM
+```
+
+Only rides within this radius are shown to the driver.
+
+---
+
+# Step 4 - Ride Acceptance
+
+## Flow
+
+1. Customer books ride
+2. Ride request created
+3. Nearby drivers notified
+4. Driver accepts ride
+5. Driver becomes BUSY
+6. Other drivers cannot accept same ride
+
+---
+
+# Step 5 - OTP Verification
+
+# Ride Start OTP
+
+## Flow
+
+1. Backend generates OTP
+2. OTP sent via Twilio SMS
+3. Customer tells OTP to driver
+4. Driver enters OTP
+5. Ride starts
+
+---
+
+# Ride End OTP
+
+## Flow
+
+1. Backend generates new OTP
+2. Customer shares OTP
+3. Driver enters OTP
+4. Ride ends
+
+---
+
+# OTP Rules
+
+```txt
+OTP expiry = 5 minutes
+```
+
+---
+
+# Step 6 - Payment System
+
+# Payment Types
+
+```txt
+1. Razorpay
+2. Cash
+```
+
+---
+
+# Razorpay Logic
+
+```txt
+20% → Admin
+80% → Driver
+```
+
+---
+
+# Cash Payment Logic
+
+- Driver collects payment
+- Driver must pay admin commission within 2 days
+- If not paid:
+  
+```txt
+driver.status = blocked
+```
+
+---
+
+# Database Design
+
+# Collections
+
+# Users Collection
+
+```js
+{
+  role: "customer/driver/admin",
+  name,
+  email,
+  phone,
+  password
+}
+```
+
+---
+
+# Drivers Collection
+
+```js
+{
+  userId,
+  address,
+  aadhaar,
+  pan,
+  license,
+  addressProof,
+  profilePhoto,
+  verified,
+  available,
+  radius,
+  rating,
+  status
+}
+```
+
+---
+
+# Bookings Collection
+
+```js
+{
+  customerId,
+  driverId,
+  startLocation,
+  endLocation,
+  startDateTime,
+  endDateTime,
+  fare,
+  paymentType,
+  paymentStatus,
+  rideStatus
+}
+```
+
+---
+
+# Payments Collection
+
+```js
+{
+  bookingId,
+  amount,
+  paymentMethod,
+  adminCommission,
+  driverAmount,
+  paymentStatus
+}
+```
+
+---
+
+# Ratings Collection
+
+```js
+{
+  customerId,
+  driverId,
+  bookingId,
+  rating,
+  review
+}
+```
+
+---
+
+# Recommended Folder Structure
+
+```txt
+project/
+│
+├── client/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── redux/
+│   │   ├── hooks/
+│   │   ├── routes/
+│   │   ├── layouts/
+│   │   └── utils/
+│
+├── server/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── sockets/
+│   ├── utils/
+│   └── uploads/
+```
+
+---
+
+# Codex Development Guide
+
+# IMPORTANT RULE
+
+## DO NOT ASK:
+
+```txt
+Build entire application
+```
+
+---
+
+# ALWAYS BUILD FEATURE-WISE
+
+Codex works best when:
+- prompts are detailed
+- features are small
+- requirements are explicit
+
+---
+
+# Recommended Development Order
+
+# Phase 1
+
+## Authentication System
+
+### Prompt
+
+```txt
+Create JWT authentication system for MERN app with:
+- register
+- login
+- role-based middleware
+- bcrypt password hashing
+- refresh token
+- protected routes
+
+Use MVC architecture.
+Generate complete code.
+```
+
+---
+
+# Phase 2
+
+# Driver Registration
+
+### Prompt
+
+```txt
+Create driver registration API with:
+- multer file upload
+- Cloudinary integration
+- validation
+- async/await
+- proper error handling
+
+Fields:
+- aadhaar
+- pan
+- license
+- profile photo
+- address proof
+```
+
+---
+
+# Phase 3
+
+# Booking System
+
+### Prompt
+
+```txt
+Create booking schema and APIs.
+
+Fields:
+- customer
+- driver
+- start location
+- end location
+- start datetime
+- end datetime
+- fare
+- ride status
+- payment status
+
+Generate:
+- models
+- controllers
+- routes
+- validation
+```
+
+---
+
+# Phase 4
+
+# Fare Calculation Service
+
+### Prompt
+
+```txt
+Create fare calculation service in Node.js.
+
+Inputs:
+- total hours
+- day hours
+- night hours
+- distance
+
+Admin settings:
+- day rate
+- night rate
+- night allowance
+- minimum fare
+
+Return final fare.
+
+Use reusable utility function.
+```
+
+---
+
+# Phase 5
+
+# Driver Matching System
+
+### Prompt
+
+```txt
+Find available drivers within 10 km radius using MongoDB geospatial queries.
+```
+
+---
+
+# Phase 6
+
+# OTP Verification
+
+### Prompt
+
+```txt
+Create Twilio OTP verification system for:
+- ride start
+- ride end
+
+Features:
+- generate OTP
+- verify OTP
+- store OTP
+- expire OTP after 5 minutes
+```
+
+---
+
+# Phase 7
+
+# Razorpay Integration
+
+### Prompt
+
+```txt
+Integrate Razorpay payment gateway in MERN app.
+
+Features:
+- create order
+- payment verification
+- webhook verification
+- commission split logic
+```
+
+---
+
+# Phase 8
+
+# Socket.io Integration
+
+### Prompt
+
+```txt
+Integrate Socket.io in MERN app for:
+- ride request notifications
+- driver acceptance
+- real-time ride status
+- driver availability updates
+```
+
+---
+
+# Frontend Development Using Codex
+
+# Booking Page Prompt
+
+```txt
+Create modern React + Tailwind booking page.
+
+Fields:
+- start date
+- end date
+- start time
+- end time
+- start location
+- end location
+- vehicle type
+- transmission type
+- fuel type
+
+Show calculated fare dynamically.
+
+Use responsive UI.
+```
+
+---
+
+# Admin Dashboard Prompt
+
+```txt
+Create React admin dashboard with:
+- verify drivers
+- activate/deactivate drivers
+- set rates
+- manage bookings
+- analytics cards
+
+Use Tailwind CSS.
+```
+
+---
+
+# Driver Dashboard Prompt
+
+```txt
+Create React driver dashboard with:
+- availability toggle
+- earnings section
+- active rides
+- ride history
+- upload documents
+```
+
+---
+
+# Customer Dashboard Prompt
+
+```txt
+Create React customer dashboard with:
+- ride history
+- active bookings
+- profile
+- payment history
+```
+
+---
+
+# Advanced Features
+
+# Ride Queue System
+
+### Prompt
+
+```txt
+Implement ride acceptance system preventing multiple drivers from accepting same ride.
+```
+
+---
+
+# Auto Busy Status
+
+### Prompt
+
+```txt
+Automatically set driver status to busy when ride accepted and available after ride completion.
+```
+
+---
+
+# Google Maps Integration
+
+### Prompt
+
+```txt
+Integrate Google Maps API for:
+- pickup location
+- destination location
+- route distance calculation
+- live map display
+```
+
+---
+
+# Security Features
+
+- JWT Authentication
+- Password Hashing
+- Input Validation
+- Helmet.js
+- Rate Limiting
+- Secure Payment Verification
+- File Upload Validation
+
+---
+
+# Best Practices
+
+Always ask Codex to:
+- Generate complete code
+- Add error handling
+- Use async/await
+- Use MVC architecture
+- Add validation
+- Add comments
+- Follow REST API conventions
+
+---
+
+# Debugging Prompt
+
+```txt
+Here is my error:
+
+[paste error]
+
+Fix the issue and explain why it happened.
+```
+
+---
+
+# UI Improvement Prompt
+
+```txt
+Improve this React UI to look premium using Tailwind CSS.
+```
+
+---
+
+# Deployment Guide
+
+# Backend Deployment
+
+### Prompt
+
+```txt
+Deploy Node.js backend on Render.
+```
+
+---
+
+# Frontend Deployment
+
+### Prompt
+
+```txt
+Deploy React frontend on Vercel.
+```
+
+---
+
+# Database Deployment
+
+### Prompt
+
+```txt
+Connect MongoDB Atlas securely.
+```
+
+---
+
+# Recommended Tools
+
+- VS Code
+- GitHub
+- Postman
+- MongoDB Compass
+- Codex
+- Render
+- Vercel
+
+---
+
+# Suggested Architecture
+
+```txt
+React Frontend
+      ↓
+Express API
+      ↓
+MongoDB
+      ↓
+Cloudinary / Twilio / Razorpay / Google Maps
+```
+
+---
+
+
+# Future Improvements
+
+- Live driver tracking
+- SOS emergency feature
+- AI pricing
+- Ride cancellation charges
+- Coupons and referrals
+- Push notifications
+- Multi-language support
+- Driver analytics
+- Admin reports
+- Mobile app version
+
+---
