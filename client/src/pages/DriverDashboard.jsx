@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Power, MapPin, Navigation, IndianRupee, Clock, CheckCircle, XCircle, User } from 'lucide-react';
+import axios from 'axios';
 
 const RideRequestCard = ({ ride, onAccept }) => (
   <motion.div 
@@ -14,7 +15,9 @@ const RideRequestCard = ({ ride, onAccept }) => (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider">New Request</span>
-          <span className="text-slate-500 text-sm flex items-center gap-1"><Clock className="w-3 h-3" /> 5 mins ago</span>
+          <span className="text-slate-500 text-sm flex items-center gap-1">
+             <Clock className="w-3 h-3" /> {new Date(ride.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
         </div>
         
         <div className="space-y-2">
@@ -63,11 +66,24 @@ const RideRequestCard = ({ ride, onAccept }) => (
 const DriverDashboard = () => {
   const [isOnline, setIsOnline] = useState(true);
   const [activeRide, setActiveRide] = useState(null);
-  
-  const [requests, setRequests] = useState([
-    { _id: '1', startLocation: 'Malad West, Mumbai', endLocation: 'Bandra Kurla Complex', fare: 1200, customerName: 'Arjun M.' },
-    { _id: '2', startLocation: 'Colaba Causeway', endLocation: 'Thane West', fare: 2800, customerName: 'Sonia K.' },
-  ]);
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const { data } = await axios.get('/api/booking/available');
+        setRequests(data);
+      } catch (err) {
+        console.error('Error fetching rides:', err);
+      }
+    };
+
+    if (isOnline) {
+      fetchRequests();
+      const interval = setInterval(fetchRequests, 5000); // Poll every 5 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isOnline]);
 
   const handleAccept = (ride) => {
     setActiveRide(ride);
@@ -114,7 +130,9 @@ const DriverDashboard = () => {
                              </div>
                              <div>
                                 <p className="text-[10px] md:text-sm text-slate-500 uppercase font-bold tracking-widest">Customer</p>
-                                <h3 className="text-xl md:text-2xl font-bold text-white">{activeRide.customerName}</h3>
+                                <h3 className="text-xl md:text-2xl font-bold text-white">
+                                   {activeRide.customerId?.name || 'Customer'}
+                                </h3>
                              </div>
                           </div>
 
@@ -152,9 +170,15 @@ const DriverDashboard = () => {
                     <div className="space-y-6">
                        {isOnline ? (
                          <AnimatePresence>
-                           {requests.map(ride => (
-                             <RideRequestCard key={ride._id} ride={ride} onAccept={handleAccept} />
-                           ))}
+                           {requests.length > 0 ? (
+                             requests.map(ride => (
+                               <RideRequestCard key={ride._id} ride={ride} onAccept={handleAccept} />
+                             ))
+                           ) : (
+                             <div className="p-20 text-center border-2 border-dashed border-slate-900 rounded-[3rem]">
+                                <p className="text-slate-600 font-bold">Waiting for new requests...</p>
+                             </div>
+                           )}
                          </AnimatePresence>
                        ) : (
                          <div className="glass p-20 rounded-[3rem] text-center">
@@ -196,14 +220,6 @@ const DriverDashboard = () => {
                         <span className="text-white font-bold">0.0</span>
                      </div>
                   </div>
-               </div>
-
-               <div className="glass p-8 rounded-[2.5rem] bg-indigo-500/5 border-indigo-500/20">
-                  <div className="flex items-center gap-3 mb-4">
-                     <CheckCircle className="text-indigo-400 w-5 h-5" />
-                     <h3 className="font-bold text-white">Top Rated Partner</h3>
-                  </div>
-                  <p className="text-sm text-slate-400 leading-relaxed">Maintaining a rating above 4.5 gives you priority access to high-fare rides.</p>
                </div>
             </div>
           </div>

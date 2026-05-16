@@ -27,6 +27,16 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Get available (pending) bookings for drivers
+router.get('/available', async (req, res) => {
+  try {
+    const bookings = await Booking.find({ status: 'pending' }).populate('customerId', 'name');
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Find available drivers for a booking
 router.get('/:id/available-drivers', async (req, res) => {
   try {
